@@ -92,7 +92,7 @@ export const check = (req, res) => {
     }
 }
 
-export const uploadProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
     const userId = req.user._id;
     const imageId = req.user.imageId;
     const {image} =  req.body;
@@ -113,7 +113,14 @@ export const uploadProfile = async (req, res) => {
         user.imageId = publicId;
         await user.save();
         
-        res.status(201).json({message: "Profile picture updated."});
+        res.status(201).json({
+            _id: user._id,
+            fName: user.fName,
+            mName: user.mName,
+            lName: user.lName,
+            email: user.email,
+            profilePic: user.profilePic
+        })
     } catch (error) {
         console.log("Error uploading picture: ", error.message);
         res.status(500).json({message: "Internal Server Errror"});
