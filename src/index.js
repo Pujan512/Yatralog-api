@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser'
 
 import blogRoutes from "./routes/blogRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
+import commentRoutes from "./routes/commentRoutes.js"
 
 config();
 const app = express();
@@ -12,8 +13,9 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 
-app.use('/api/blogs', blogRoutes)
 app.use('/api/auth', authRoutes)
+app.use('/api/blogs', blogRoutes)
+app.use('/api/comments', commentRoutes)
 
 app.listen(5000, ()=> {
     console.log("Listening on port 5000");

@@ -2,7 +2,7 @@ import Blog from "../models/blog.model.js"
 import cloudinary from "../lib/cloudinary.js";
 export const getBlogs = async (req, res) => {
     try {
-        const blogs = await Blog.find();
+        const blogs = await Blog.find().select("-comments");
         if(!blogs.length) {
             return res.status(404).json({message: "No blogs available"})
         }
@@ -17,7 +17,8 @@ export const getBlogs = async (req, res) => {
 export const getBlog = async (req, res) => {
     const blogId = req.params.id;
     try {
-        const blog = await Blog.findById(blogId).populate('authorId', 'fName lName profilePic');
+        const blog = await Blog.findById(blogId)
+                               .populate('authorId', 'fName lName profilePic')
         if(!blog){
             return res.status(404).json({message: "Blog not found"});
         }
@@ -112,6 +113,8 @@ export const deleteBlog = async (req, res) => {
         if(blog.imageIds.length){
             blog.imageIds.forEach(async(id) => await cloudinary.uploader.destroy(id))
         }
+
+        await Comment.deleteMany({blogId});
         await Blog.findByIdAndDelete(blog._id);
         res.status(201).json({message: `${blog.title} deleted successfully`});
     } catch (error) {
