@@ -2,6 +2,7 @@ import express from 'express';
 import {config} from 'dotenv';
 import mongoose from "mongoose";
 import cookieParser from 'cookie-parser'
+import bodyParser from 'body-parser';
 import cors from "cors";
 
 import blogRoutes from "./routes/blogRoutes.js"
@@ -11,6 +12,8 @@ import commentRoutes from "./routes/commentRoutes.js"
 config();
 const app = express();
 
+app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.json())
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({

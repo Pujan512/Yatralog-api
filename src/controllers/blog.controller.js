@@ -31,17 +31,16 @@ export const getBlog = async (req, res) => {
 }
 
 export const postBlog = async (req, res) => {
-    const {title, description, images} = req.body;
+    const {title, description} = req.body;
     const authorId = req.user._id;
+
+    const images = req.files?.map(file => ({
+        url: file.path,
+        public_id: file.filename
+    }))
+
     try {
-        let imageUrls=[];
-        if(images){
-            images.forEach(async (image) => {
-                const uploadImage = await cloudinary.uploader.upload(image, {quality: "auto", format: "webp"});
-                imageUrls.push(uploadImage.secure_url)
-            });
-        }
-        const newBlog = new Blog({title, description, images : imageUrls, authorId})
+        const newBlog = new Blog({title, description, images, authorId})
 
         if(!newBlog){
             return res.status(400).json({message: "Error creating blog"});
@@ -58,7 +57,7 @@ export const postBlog = async (req, res) => {
 export const editBlog = async (req, res) => {
     const userId = req.user._id;
     const blogId = req.params.id;
-    const {title, description, images} = req.body;
+    const {title, description} = req.body;
     try {
         const blog = await Blog.findById(blogId);
         if(!blog) {
@@ -69,23 +68,18 @@ export const editBlog = async (req, res) => {
             return res.status(401).json({message: "Unauthorized attempt to modify blog"});
         }
 
-        
-        const imageUrls = [];
-        const imagePublicIds = [];
-        if(images){
-            if(blog.imageIds.length)
-                blog.imageIds.forEach(async (id)=> await cloudinary.uploader.destroy(id));
-            images.forEach(async (image) => {
-                const uploadImage = await cloudinary.uploader.upload(image, {quality: "auto", format: "webp"});
-                imageUrls.push(uploadImage.secure_url)
-                imagePublicIds.push(uploadImage.public_id);
-            });
+        if(req.files?.length){
+            await Promise.all(blog.images.map(async image => {
+                await cloudinary.uploader.destroy(image.public_id);
+            }))
         }
 
         blog.title = title;
         blog.description = description;
-        blog.images = imageUrls;
-        blog.imageIds = imagePublicIds;
+        blog.images = req.files.map(file => ({
+            url: file.path,
+            public_id: file.filename
+        }));
 
         await blog.save();
         res.status(201).json(blog);
@@ -110,8 +104,10 @@ export const deleteBlog = async (req, res) => {
             return res.status(401).json({message: "Unauthorized attempt to delete blog"});
         }
 
-        if(blog.imageIds.length){
-            blog.imageIds.forEach(async(id) => await cloudinary.uploader.destroy(id))
+        if(blog.images.length){
+            await Promise.all(blog.images.map(async image => {
+                await cloudinary.uploader.destroy(image.public_id);
+            }))
         }
 
         await Comment.deleteMany({blogId});
