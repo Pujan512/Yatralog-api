@@ -1,4 +1,5 @@
 import Blog from "../models/blog.model.js"
+import Comment from "../models/comment.model.js"
 import cloudinary from "../lib/cloudinary.js";
 export const getBlogs = async (req, res) => {
     try {
@@ -99,11 +100,11 @@ export const deleteBlog = async (req, res) => {
         if(!blog){
             return res.status(404).json({message: "Blogs doesn't exist"});
         }
-
+        
         if(!blog.authorId.equals(userId)){
             return res.status(401).json({message: "Unauthorized attempt to delete blog"});
         }
-
+        
         if(blog.images.length){
             await Promise.all(blog.images.map(async image => {
                 await cloudinary.uploader.destroy(image.public_id);
@@ -114,6 +115,7 @@ export const deleteBlog = async (req, res) => {
         await Blog.findByIdAndDelete(blog._id);
         res.status(201).json({message: `${blog.title} deleted successfully`});
     } catch (error) {
-        
+        console.log("Error deleting the blog: ",error.message);
+        res.status(500).json({message: "Internal Server Errror"});
     }
 }

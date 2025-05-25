@@ -105,7 +105,7 @@ export const updateProfile = async (req, res) => {
         
         if(imageId)
             await cloudinary.uploader.destroy(imageId);
-        const uploadImage = await cloudinary.uploader.upload(image, {quality: "auto", format: "webp"})
+        const uploadImage = await cloudinary.uploader.upload(image)
         const imgUrl = uploadImage.secure_url;
         const publicId = uploadImage.public_id;
         
